@@ -1,7 +1,16 @@
+using PortalPokemon.Clients;
+using PortalPokemon.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpClient<PokeApiClient>(client =>
+{
+    client.BaseAddress = new Uri("https://pokeapi.co/api/v2/");
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
+builder.Services.AddScoped<PokemonService>();
 
 var app = builder.Build();
 
