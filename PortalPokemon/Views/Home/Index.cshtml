@@ -2,10 +2,24 @@
     ViewData["Title"] = "Home Page";
 }
 
-@model PokemonModel
+@model IReadOnlyList<PokemonModel>
 
 @if (Model is not null)
 {
-    <partial name="_PokemonCard" model="Model" />
+    <pre id="pokemon-debug" style="display: none;">@System.Text.Json.JsonSerializer.Serialize(Model)</pre>
+
+    <script>
+        const jsonText = document.getElementById("pokemon-debug").textContent;
+        const pokemon = JSON.parse(jsonText);
+
+        console.log(pokemon);
+    </script>
+
+    <div class="pokemon-grid">
+        @foreach (var pokemon in Model)
+        {
+            <partial name="_PokemonCard" model="pokemon" />
+        }
+    </div>
 }
 

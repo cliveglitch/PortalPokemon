@@ -30,7 +30,8 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    name: "pokemon-home",
+    pattern: "",
+    defaults: new { controller = "Pokemon", action = "Paginated" });
 
 app.Run();

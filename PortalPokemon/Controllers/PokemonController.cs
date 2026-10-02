@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using PortalPokemon.Models;
 using PortalPokemon.Services;
 
 namespace PortalPokemon.Controllers
@@ -25,16 +26,15 @@ namespace PortalPokemon.Controllers
                 return NotFound();
             }
 
-            return View("~/Views/Home/Index.cshtml", pokemon);
+            var items = new List<PokemonModel> { pokemon };
+
+            return View("~/Views/Home/Index.cshtml", items);
         }
 
-        public async Task<IActionResult> Paginated(int limit = 20, int offset = 0, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Paginated(int limit = 30, int offset = 0, CancellationToken cancellationToken = default)
         {
             var paginatedPokemon = await _pokemonService.GetPaginatedPokemonAsync(limit, offset, cancellationToken);
-            if (paginatedPokemon == null)
-            {
-                return NotFound();
-            }
+
             return View("~/Views/Home/Index.cshtml", paginatedPokemon);
         }
     }
