@@ -7,7 +7,7 @@ namespace PortalPokemon.Models
         [JsonPropertyName("id")]
         public int Id { get; set; }
         [JsonPropertyName("name")]
-        public string Name { get; set; } = string.Empty;
+        public string? Name { get; set; }
         [JsonPropertyName("height")]
         public int Height { get; set; }
         [JsonPropertyName("base_experience")]

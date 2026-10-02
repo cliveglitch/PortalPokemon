@@ -30,5 +30,19 @@ namespace PortalPokemon.Clients
 
             return pokemon;
         }
+
+        public async Task<PaginatedPokemonModel?> GetPaginatedPokemonAsync(int limit, int offset, CancellationToken cancellationToken)
+        {
+            using var response = await _httpClient.GetAsync($"pokemon?limit={limit}&offset={offset}", cancellationToken);
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Error fetching paginated Pokemon data: {response.StatusCode} - {content}");
+            }
+
+            var paginatedPokemon = System.Text.Json.JsonSerializer.Deserialize<PaginatedPokemonModel>(content);
+            return paginatedPokemon;
+        }
     }
 }
