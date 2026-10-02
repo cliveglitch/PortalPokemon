@@ -4,13 +4,11 @@ namespace PortalPokemon.Models
 {
     public class PaginatedPokemonModel
     {
-        [JsonPropertyName("count")]
         public int Count { get; set; }
-        [JsonPropertyName("next")]
         public String? Next { get; set; }
-        [JsonPropertyName("previous")]
         public String? Previous { get; set; }
-        [JsonPropertyName("results")]
-        public List<PaginatedPokemonResultModel> Results { get; set; } = new List<PaginatedPokemonResultModel>();
+        public int Limit { get; set; }
+        public int Offset { get; set; }
+        public IReadOnlyList<PokemonModel> Pokemons { get; set; } = new List<PokemonModel>();
     }
 }

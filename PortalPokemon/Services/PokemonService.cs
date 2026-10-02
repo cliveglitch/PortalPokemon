@@ -34,12 +34,12 @@ namespace PortalPokemon.Services
         /// <param name="offset">Desplazamiento para la paginación</param>
         /// <param name="cancellationToken">El token de cancelación.</param>
         /// <returns>La lista paginada de Pokémon.</returns>
-        public async Task<IReadOnlyList<PokemonModel>> GetPaginatedPokemonAsync(int limit, int offset, CancellationToken cancellationToken)
+        public async Task<PaginatedPokemonModel> GetPaginatedPokemonAsync(int limit, int offset, CancellationToken cancellationToken)
         {
             var page = await _pokeApiClient.GetPaginatedPokemonAsync(limit, offset, cancellationToken);
             if(page == null || page.Results == null)
             {
-                return new List<PokemonModel>();
+                return new PaginatedPokemonModel { Limit = limit, Offset = offset };
             }
 
             var items = new List<PokemonModel>();
@@ -56,7 +56,15 @@ namespace PortalPokemon.Services
                 items.Add(pokemon ?? new PokemonModel { Name = result.Name });
             }
 
-            return items;
+            return new PaginatedPokemonModel
+            {
+                Count = page.Count,
+                Next = page.Next,
+                Previous = page.Previous,
+                Limit = limit,
+                Offset = offset,
+                Pokemons = items
+            }; 
         }
     }
 }

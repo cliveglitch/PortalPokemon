@@ -96,3 +96,35 @@ body {
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 1rem;
 }
+
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+    .pagination-controls a, .pagination-controls .pagination-disabled {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: #2456a6;
+        color: white;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+        .pagination-controls a:hover {
+            background: #193d78;
+        }
+
+        .pagination-controls a:focus-visible {
+            outline: 2px solid #193d78;
+            outline-offset: 3px;
+        }
+
+    .pagination-controls .pagination-disabled {
+        background: #e2e6ed;
+        color: #626b78;
+        cursor: not-allowed;
+    }

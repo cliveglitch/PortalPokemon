@@ -29,7 +29,12 @@ namespace PortalPokemon.Clients
                 throw new ArgumentException("Pokemon name cannot be null or whitespace.", nameof(name));
             }
 
-            using var response = await _httpClient.GetAsync($"pokemon/{name}", cancellationToken);
+            Console.WriteLine($"Starting download: {name}");
+
+            using var response = await _httpClient.GetAsync(
+                $"pokemon/{name}", cancellationToken);
+
+            Console.WriteLine($"Finished download: {name}");
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -55,7 +60,7 @@ namespace PortalPokemon.Clients
         /// <param name="cancellationToken">El token de cancelación.</param>
         /// <returns>La lista paginada de Pokémon o null si no se encuentra.</returns>
         /// <exception cref="Exception"></exception>
-        public async Task<PaginatedPokemonModel?> GetPaginatedPokemonAsync(int limit, int offset, CancellationToken cancellationToken)
+        public async Task<PaginatedPokemonResponseModel?> GetPaginatedPokemonAsync(int limit, int offset, CancellationToken cancellationToken)
         {
             using var response = await _httpClient.GetAsync($"pokemon?limit={limit}&offset={offset}", cancellationToken);
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -65,7 +70,7 @@ namespace PortalPokemon.Clients
                 throw new Exception($"Error fetching paginated Pokemon data: {response.StatusCode} - {content}");
             }
 
-            var paginatedPokemon = System.Text.Json.JsonSerializer.Deserialize<PaginatedPokemonModel>(content);
+            var paginatedPokemon = System.Text.Json.JsonSerializer.Deserialize<PaginatedPokemonResponseModel>(content);
             return paginatedPokemon;
         }
     }

@@ -2,7 +2,7 @@
     ViewData["Title"] = "Home Page";
 }
 
-@model IReadOnlyList<PokemonModel>
+@model PaginatedPokemonModel
 
 @if (Model is not null)
 {
@@ -16,10 +16,32 @@
     </script>
 
     <div class="pokemon-grid">
-        @foreach (var pokemon in Model)
+        @foreach (var pokemon in Model.Pokemons)
         {
             <partial name="_PokemonCard" model="pokemon" />
         }
     </div>
+
+    <nav class="pagination-controls" aria-label="Pokémon pages">
+        @if (Model.Previous is not null)
+        {
+            <a href="/?limit=@Model.Limit&offset=@(Math.Max(0, Model.Offset - Model.Limit))">Previous</a>
+        } else
+        {
+            <span class="pagination-disabled" role="link" aria-disabled="true">
+                Previous
+            </span>
+        }
+
+        @if (Model.Next is not null)
+        {
+            <a href="/?limit=@Model.Limit&offset=@(Model.Offset + Model.Limit)">Next</a>
+        } else
+        {
+            <span class="pagination-disabled" role="link" aria-disabled="true">
+                Next
+            </span>
+        }
+    </nav>
 }
 

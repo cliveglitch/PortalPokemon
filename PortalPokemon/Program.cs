@@ -1,5 +1,6 @@
 using PortalPokemon.Clients;
 using PortalPokemon.Services;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,11 @@ builder.Services.AddHttpClient<PokeApiClient>(client =>
 {
     client.BaseAddress = new Uri("https://pokeapi.co/api/v2/");
     client.Timeout = TimeSpan.FromSeconds(15);
+})
+.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    AutomaticDecompression =
+        DecompressionMethods.GZip | DecompressionMethods.Deflate
 });
 builder.Services.AddScoped<PokemonService>();
 
@@ -33,5 +39,9 @@ app.MapControllerRoute(
     name: "pokemon-home",
     pattern: "",
     defaults: new { controller = "Pokemon", action = "Paginated" });
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

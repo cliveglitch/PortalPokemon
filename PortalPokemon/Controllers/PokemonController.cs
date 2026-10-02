@@ -26,13 +26,30 @@ namespace PortalPokemon.Controllers
                 return NotFound();
             }
 
-            var items = new List<PokemonModel> { pokemon };
+            var items = new PaginatedPokemonModel
+            {
+                Count = 1,
+                Pokemons = new List<PokemonModel> { pokemon }
+            };
 
             return View("~/Views/Home/Index.cshtml", items);
         }
 
         public async Task<IActionResult> Paginated(int limit = 30, int offset = 0, CancellationToken cancellationToken = default)
         {
+            if (limit <= 0)
+            {
+                return BadRequest("Limit must be a positive integer.");
+            }
+            if (limit > 200)
+            {
+                return BadRequest("Limit cannot exceed 200.");
+            }
+            if (offset < 0)
+            {
+                return BadRequest("Offset must be a non-negative integer.");
+            }
+
             var paginatedPokemon = await _pokemonService.GetPaginatedPokemonAsync(limit, offset, cancellationToken);
 
             return View("~/Views/Home/Index.cshtml", paginatedPokemon);
