@@ -1,0 +1,14 @@
+﻿@model PokemonModel
+
+<pre id="pokemon-debug" style="display: none;">@System.Text.Json.JsonSerializer.Serialize(Model)</pre>
+
+<script>
+    const jsonText = document.getElementById("pokemon-debug").textContent;
+    const pokemon = JSON.parse(jsonText);
+
+    console.log(pokemon);
+</script>
+
+<article class="pokemon-card">
+    <h2>@Model.Name</h2>
+</article>
