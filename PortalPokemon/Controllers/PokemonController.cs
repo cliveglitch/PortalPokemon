@@ -28,5 +28,14 @@ namespace PortalPokemon.Controllers
             return View("~/Views/Home/Index.cshtml", pokemon);
         }
 
+        public async Task<IActionResult> Paginated(int limit = 20, int offset = 0, CancellationToken cancellationToken = default)
+        {
+            var paginatedPokemon = await _pokemonService.GetPaginatedPokemonAsync(limit, offset, cancellationToken);
+            if (paginatedPokemon == null)
+            {
+                return NotFound();
+            }
+            return View("~/Views/Home/Index.cshtml", paginatedPokemon);
+        }
     }
 }

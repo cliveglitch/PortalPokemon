@@ -5,8 +5,8 @@ namespace PortalPokemon.Models
     public class PokemonSpeciesModel
     {
         [JsonPropertyName("name")]
-        public string Name { get; set; } = string.Empty;
+        public string? Name { get; set; }
         [JsonPropertyName("url")]
-        public string Url { get; set; } = string.Empty;
+        public string? Url { get; set; }
     }
 }

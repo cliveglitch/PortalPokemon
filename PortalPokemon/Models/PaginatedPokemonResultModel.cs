@@ -2,11 +2,11 @@
 
 namespace PortalPokemon.Models
 {
-    public class PokemonTypeModel
+    public class PaginatedPokemonResultModel
     {
         [JsonPropertyName("name")]
-        public string? Name { get; set; }
+        public String? Name { get; set; }
         [JsonPropertyName("url")]
-        public string? Url { get; set; }
+        public String? Url { get; set; }
     }
 }
