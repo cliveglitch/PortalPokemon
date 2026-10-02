@@ -10,5 +10,15 @@
 </script>
 
 <article class="pokemon-card">
+    <div class="pokemon-card-image">
+        @if (Model.Sprites.FrontDefault is null)
+        {
+            <img class="pokemon-placeholder" src="~/images/missing-pokemon-sprite.webp" alt="Imagen no disponible para @Model.Name" />
+        }
+        else
+        {
+            <img class="pokemon-sprite" src="@Model.Sprites.FrontDefault" alt="@Model.Name" />
+        }
+    </div> 
     <h2>@Model.Name</h2>
 </article>
