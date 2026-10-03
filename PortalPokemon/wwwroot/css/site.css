@@ -183,3 +183,27 @@ body {
         outline: 2px solid #2456a6;
         outline-offset: -2px;
     }
+
+.species-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 100%;
+}
+
+    .species-filter select {
+        width: 16rem;
+        min-width: 0;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #dce1e7;
+        border-radius: 6px;
+        background-color: white;
+        color: #2456a6;
+        font: inherit;
+        cursor: pointer;
+    }
+
+        .species-filter select:focus-visible {
+            outline: 2px solid #2456a6;
+            outline-offset: 2px;
+        }

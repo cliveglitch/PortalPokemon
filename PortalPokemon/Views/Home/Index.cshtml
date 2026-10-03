@@ -2,7 +2,7 @@
     ViewData["Title"] = "Home Page";
 }
 
-@model PaginatedPokemonModel
+@model PokePortalModel
 
 @if (Model is not null)
 {
@@ -27,26 +27,43 @@
             <button type="submit">Search</button>
         </div>
 
-        <input type="hidden" name="limit" value="@Model.Limit" />
+        <div class="species-filter">
+            <label for="pokemon-species">Species</label>
+
+            <select id="pokemon-species" name="speciesFilter">
+                <option value="">All species</option>
+
+                @foreach (var species in Model.AvailableSpecies)
+                {
+                    <option value="@species"
+                            selected="@(species == Model.SpeciesFilter)">
+                        @species
+                    </option>
+                }
+            </select>
+        </div>
+
+        <input type="hidden" name="limit" value="@Model.PokemonGrid.Limit" />
         <input type="hidden" name="offset" value="0" />
 
     </form>
 
     <div class="pokemon-grid">
-        @foreach (var pokemon in Model.Pokemons)
+        @foreach (var pokemon in Model.PokemonGrid.Pokemons)
         {
             <partial name="_PokemonCard" model="pokemon" />
         }
     </div>
 
     <nav class="pagination-controls" aria-label="Pokémon pages">
-        @if (Model.HasPrevious)
+        @if (Model.PokemonGrid.HasPrevious)
         {
             <a asp-controller="Pokemon"
                asp-action="Paginated"
                asp-route-nameFilter="@Model.NameFilter"
-               asp-route-limit="@Model.Limit"
-               asp-route-offset="@(Math.Max(0, Model.Offset - Model.Limit))">
+               asp-route-speciesFilter="@Model.SpeciesFilter"
+               asp-route-limit="@Model.PokemonGrid.Limit"
+               asp-route-offset="@(Math.Max(0, Model.PokemonGrid.Offset - Model.PokemonGrid.Limit))">
                 Previous
             </a>
         } else
@@ -56,13 +73,14 @@
             </span>
         }
 
-        @if (Model.HasNext)
+        @if (Model.PokemonGrid.HasNext)
         {
             <a asp-controller="Pokemon"
                asp-action="Paginated"
                asp-route-nameFilter="@Model.NameFilter"
-               asp-route-limit="@Model.Limit"
-               asp-route-offset="@(Model.Offset + Model.Limit)">
+               asp-route-speciesFilter="@Model.SpeciesFilter"
+               asp-route-limit="@Model.PokemonGrid.Limit"
+               asp-route-offset="@(Model.PokemonGrid.Offset + Model.PokemonGrid.Limit)">
                 Next
             </a>
         } else

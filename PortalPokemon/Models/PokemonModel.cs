@@ -20,6 +20,6 @@ namespace PortalPokemon.Models
         [JsonPropertyName("sprites")]
         public PokemonSpritesModel Sprites { get; set; } = new PokemonSpritesModel();
         [JsonPropertyName("species")]
-        public PokemonSpeciesModel Species { get; set; } = new PokemonSpeciesModel();
+        public PaginatedPokemonSpeciesResultModel Species { get; set; } = new PaginatedPokemonSpeciesResultModel();
     }
 }

@@ -35,18 +35,32 @@ namespace PortalPokemon.Services
         /// <param name="nameFilter">Filtro por nombre.</param>
         /// <param name="cancellationToken">El token de cancelación.</param>
         /// <returns>La lista paginada de Pokémon.</returns>
-        public async Task<PaginatedPokemonModel> GetPaginatedPokemonAsync(int limit, int offset, string? nameFilter, CancellationToken cancellationToken)
+        public async Task<PokePortalModel> GetPaginatedPokemonAsync(int limit, int offset, string? nameFilter, string? speciesFilter, CancellationToken cancellationToken)
         {
-            var catalog = await _pokeApiClient.GetPokemonCatalogAsync(cancellationToken);
+            var catalogTask = _pokeApiClient.GetPokemonCatalogAsync(cancellationToken);
+            var speciesCatalogTask = _pokeApiClient.GetPokemonSpeciesCatalogAsync(cancellationToken);
 
-            var search = nameFilter?.Trim() ?? "";
+            await Task.WhenAll(catalogTask, speciesCatalogTask);
+
+            var catalog = await catalogTask;
+            var speciesCatalog = await speciesCatalogTask;
+
+            var nameSearch = nameFilter?.Trim() ?? "";
             var candidates = catalog.AsEnumerable();
 
-            if (search.Length > 0)
+            if (!string.IsNullOrWhiteSpace(speciesFilter))
             {
+                // Filtro por especia
+                candidates = await _pokeApiClient.GetAllPokemonBySpeciesAsync(
+                    speciesFilter, cancellationToken);
+            }
+
+            if (nameSearch.Length > 0)
+            {
+                // Filtro por nombre
                 candidates = candidates.Where(p =>
                     p.Name?.Contains(
-                        search, StringComparison.OrdinalIgnoreCase) == true);
+                        nameSearch, StringComparison.OrdinalIgnoreCase) == true);
             }
 
             var matches = candidates.ToList();
@@ -54,9 +68,10 @@ namespace PortalPokemon.Services
 
             var items = new List<PokemonModel>();
 
-            foreach(var result in pageResults)
+            // Obtener los detalles de cada Pokémon en la página actual
+            foreach (var result in pageResults)
             {
-                if(string.IsNullOrWhiteSpace(result.Name))
+                if (string.IsNullOrWhiteSpace(result.Name))
                 {
                     items.Add(new PokemonModel { Name = result.Name });
                     continue;
@@ -66,16 +81,26 @@ namespace PortalPokemon.Services
                 items.Add(pokemon ?? new PokemonModel { Name = result.Name });
             }
 
-            return new PaginatedPokemonModel
+            var availableSpecies = speciesCatalog
+                .Where(s => !string.IsNullOrWhiteSpace(s.Name))
+                .Select(s => s.Name!)
+                .ToList();
+
+            return new PokePortalModel
             {
-                Count = matches.Count,
-                HasNext = (long)offset + limit < matches.Count,
-                HasPrevious = offset > 0,
-                Limit = limit,
-                Offset = offset,
-                Pokemons = items,
-                NameFilter = nameFilter
-            }; 
+                PokemonGrid = new PaginatedPokemonModel
+                {
+                    Count = matches.Count,
+                    HasNext = (long)offset + limit < matches.Count,
+                    HasPrevious = offset > 0,
+                    Limit = limit,
+                    Offset = offset,
+                    Pokemons = items
+                },
+                NameFilter = nameFilter,
+                SpeciesFilter = speciesFilter,
+                AvailableSpecies = availableSpecies
+            };
         }
     }
 }

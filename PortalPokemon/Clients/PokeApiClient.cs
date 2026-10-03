@@ -102,17 +102,127 @@ namespace PortalPokemon.Clients
             return paginatedPokemon;
         }
 
+        /// <summary>
+        /// Obtenemos el catálogo completo de Pokémon. Este método obtiene todos los Pokémon disponibles en la API y los devuelve como una lista de resultados paginados.
+        /// </summary>
+        /// <param name="cancellationToken">El token de cancelación.</param>
+        /// <returns>La lista de resultados paginados de Pokémon.</returns>
+        /// <exception cref="InvalidOperationException"></exception>
         public async Task<IReadOnlyList<PaginatedPokemonResultModel>>GetPokemonCatalogAsync(CancellationToken cancellationToken)
         {
-            var cacheKey = "pokemon_catalog";
             var catalog = await GetPaginatedPokemonAsync(100_000, 0, cancellationToken);
-            if (catalog is not null)
-            {
-                _cache.Set(cacheKey, catalog, TimeSpan.FromHours(6));
-            }
 
             return catalog?.Results
                 ?? throw new InvalidOperationException("PokéAPI returned no Pokémon catalog.");    
+        }
+
+        /// <summary>
+        /// Obtenemos una lista paginada de especies de Pokémon.
+        /// </summary>
+        /// <param name="limit">El límite de resultados.</param>
+        /// <param name="offset">El desplazamiento de resultados.</param>
+        /// <param name="cancellationToken">El token de cancelación.</param>
+        /// <returns>La lista de resultados paginados de especies de Pokémon.</returns>
+        /// <exception cref="Exception"></exception>
+        public async Task<PaginatedPokemonSpeciesResponseModel?> GetPaginatedPokemonSpeciesAsync(int limit, int offset, CancellationToken cancellationToken)
+        {
+            var cacheKey = $"paginated_pokemon_species:{limit}:{offset}";
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (_cache.TryGetValue<PaginatedPokemonSpeciesResponseModel>(cacheKey, out var cachedPaginatedPokemonSpecies))
+            {
+                return cachedPaginatedPokemonSpecies;
+            }
+
+            using var response = await _httpClient.GetAsync($"pokemon-species?limit={limit}&offset={offset}", cancellationToken);
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Error fetching paginated Pokemon species data: {response.StatusCode} - {content}");
+            }
+
+            var paginatedPokemonSpecies = System.Text.Json.JsonSerializer.Deserialize<PaginatedPokemonSpeciesResponseModel>(content);
+            if (paginatedPokemonSpecies is not null)
+            {
+                _cache.Set(cacheKey, paginatedPokemonSpecies, TimeSpan.FromHours(6));
+            }
+
+            return paginatedPokemonSpecies;
+        }
+
+        /// <summary>
+        /// Obtenemos el catálogo completo de especies de Pokémon. Este método obtiene todas las especies de Pokémon disponibles en la API y las devuelve como una lista de resultados paginados.
+        /// </summary>
+        /// <param name="cancellationToken">El token de cancelación.</param>
+        /// <returns>La lista de especies de Pokémon.</returns>
+        /// <exception cref="InvalidOperationException"></exception>
+
+        public async Task<IReadOnlyList<PaginatedPokemonSpeciesResultModel>> GetPokemonSpeciesCatalogAsync(CancellationToken cancellationToken)
+        {
+            var catalog = await GetPaginatedPokemonSpeciesAsync(100_000, 0, cancellationToken);
+
+            return catalog?.Results
+                ?? throw new InvalidOperationException("PokéAPI returned no Pokémon species catalog.");
+        }
+
+        /// <summary>
+        /// Obtenemos todos los Pokémon que pertenecen a una especie específica. Este método consulta la API para obtener la información de la especie y luego extrae la lista de variedades de Pokémon asociadas a esa especie.
+        /// </summary>
+        /// <param name="speciesName">El nombre de la especie de Pokémon.</param>
+        /// <param name="cancellationToken">El token de cancelación.</param>
+        /// <returns>La lista de Pokémon de la especie especificada.</returns>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="Exception"></exception>
+        public async Task<IReadOnlyList<PaginatedPokemonResultModel>> GetAllPokemonBySpeciesAsync(string speciesName, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(speciesName))
+            {
+                throw new ArgumentException("Species name cannot be null or whitespace.", nameof(speciesName));
+            }
+
+            speciesName = speciesName.Trim().ToLowerInvariant();
+            var cacheKey = $"pokemon_by_species:{speciesName}";
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (_cache.TryGetValue<IReadOnlyList<PaginatedPokemonResultModel>>(cacheKey, out var cachedPokemonBySpecies))
+            {
+                return cachedPokemonBySpecies;
+            }
+
+            using var response = await _httpClient.GetAsync($"pokemon-species/{speciesName}", cancellationToken);
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                throw new InvalidOperationException($"Pokémon species '{speciesName}' not found.");
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Error fetching Pokémon species data: {response.StatusCode} - {content}");
+            }
+
+            var speciesData = System.Text.Json.JsonSerializer.Deserialize<PokemonSpeciesModel>(content);
+
+            if(speciesData is null)
+            {
+                throw new InvalidOperationException($"Pokémon species '{speciesName}' data could not be deserialized.");
+            }
+
+            var pokemonList = speciesData.Varieties
+                .Select(variety => new PaginatedPokemonResultModel
+                {
+                    Name = variety.Pokemon.Name,
+                    Url = variety.Pokemon.Url
+                })
+                .ToList();
+
+            _cache.Set(cacheKey, pokemonList, TimeSpan.FromHours(6));
+
+            return pokemonList;
         }
     }
 }

@@ -26,16 +26,19 @@ namespace PortalPokemon.Controllers
                 return NotFound();
             }
 
-            var items = new PaginatedPokemonModel
+            var items = new PokePortalModel
             {
-                Count = 1,
-                Pokemons = new List<PokemonModel> { pokemon }
+                PokemonGrid = new PaginatedPokemonModel
+                {
+                    Count = 1,
+                    Pokemons = new List<PokemonModel> { pokemon }
+                }
             };
 
             return View("~/Views/Home/Index.cshtml", items);
         }
 
-        public async Task<IActionResult> Paginated(int limit = 30, int offset = 0, string? nameFilter = null, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Paginated(int limit = 30, int offset = 0, string? nameFilter = null, string? speciesFilter = null, CancellationToken cancellationToken = default)
         {
             if (limit <= 0)
             {
@@ -50,7 +53,7 @@ namespace PortalPokemon.Controllers
                 return BadRequest("Offset must be a non-negative integer.");
             }
 
-            var paginatedPokemon = await _pokemonService.GetPaginatedPokemonAsync(limit, offset, nameFilter, cancellationToken);
+            var paginatedPokemon = await _pokemonService.GetPaginatedPokemonAsync(limit, offset, nameFilter, speciesFilter, cancellationToken);
 
             return View("~/Views/Home/Index.cshtml", paginatedPokemon);
         }
