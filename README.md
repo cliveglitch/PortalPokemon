@@ -1,10 +1,13 @@
 # Prueba Tecnica Portal Pokemon
 
 Aplicación web en .NET Core 8 MVC que muestra un listado de Pokémon's mediante el consumo de la API https://pokeapi.co/
+<img width="1919" height="1026" alt="image" src="https://github.com/user-attachments/assets/073191c4-0f5f-4bb1-aa5b-e42811d434c5" />
 
 ## Funcionalidades
 
 Se muestra un grid de máximo 30 Pokémon por pagina, cada Pokémon esta contenido en una carta con su sprite y nombre. La vista maneja varias páginas y el usuario puede navegar entre ellas mediante los controles localizados abajo del grid. Se puede dar click a un Pokémon para abrir una vista que muestra a detalle su información y también datos de su especie.
+
+<img width="1919" height="1025" alt="image" src="https://github.com/user-attachments/assets/4d5c7394-55b8-4344-a1a6-3a34a7566cb1" />
 
 El grid puede ser filtrado en la caja de texto por nombres de Pokémon y también por el dropdown de especies, los dos filtros localizados arriba del grid. 
 
@@ -13,6 +16,7 @@ Las requests hechas en la aplicación maneja cache para no tener que llamar de m
 Se puede exportar la pagina actual del grid filtrado a un excel, que mostrará dos columnas, una con el nombre del Pokémon y la otra con su sprite. 
 
 En la misma fila de los filtros al otro lado extremo hay una caja de texto que te permite entrar un correo electrónico que va a recibir la pagina actual del grid filtrado. El la vista que muestra la información de un Pokémon, en el mismo lugar, también tiene una caja de texto para recibir un correo, pero este enviará el detalle de ese Pokémon.
+<img width="1919" height="1020" alt="image" src="https://github.com/user-attachments/assets/6accd2a7-cd2d-4a6c-9544-fc6aafe32bae" />
 
 ## Diseño de la aplicación
 
