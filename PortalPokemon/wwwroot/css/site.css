@@ -429,3 +429,23 @@ a.pokemon-card {
         font-size: 0.85rem;
         text-transform: capitalize;
     }
+
+.pagination-controls {
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+    .pagination-controls .pagination-current {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        background: #193d78;
+        color: white;
+        font-weight: 700;
+        box-shadow: 0 0 0 2px #ffcb05;
+    }
+
+    .pagination-controls .pagination-ellipsis {
+        padding: 0 0.25rem;
+        color: #626b78;
+    }

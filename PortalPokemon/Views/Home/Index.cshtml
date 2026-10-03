@@ -19,6 +19,25 @@
 
 @if (Model is not null)
 {
+    var grid = Model.PokemonGrid;
+    var currentPage = grid.Offset / grid.Limit + 1;
+    var totalPages = (int)Math.Ceiling(grid.Count / (double)grid.Limit);
+
+    var pages = Enumerable.Range(1, totalPages)
+        .Where(page => page == 1
+            || page == totalPages
+            || Math.Abs(page - currentPage) <= 2);
+
+    string? PageUrl(int page) => Url.Action("Paginated", "Pokemon", new
+    {
+        limit = grid.Limit,
+        offset = (page - 1) * grid.Limit,
+        nameFilter = Model.NameFilter,
+        speciesFilter = Model.SpeciesFilter
+    });
+
+    var previousPage = 0;
+
     <pre id="pokemon-debug" style="display: none;">@System.Text.Json.JsonSerializer.Serialize(Model)</pre>
 
     <script>
@@ -109,40 +128,47 @@
         }
     </div>
 
-    <nav class="pagination-controls" aria-label="Pokémon pages">
-        @if (Model.PokemonGrid.HasPrevious)
-        {
-            <a asp-controller="Pokemon"
-               asp-action="Paginated"
-               asp-route-nameFilter="@Model.NameFilter"
-               asp-route-speciesFilter="@Model.SpeciesFilter"
-               asp-route-limit="@Model.PokemonGrid.Limit"
-               asp-route-offset="@(Math.Max(0, Model.PokemonGrid.Offset - Model.PokemonGrid.Limit))">
-                Anterior
-            </a>
-        } else
-        {
-            <span class="pagination-disabled" role="link" aria-disabled="true">
-                Anterior
-            </span>
-        }
+    @if (totalPages > 1)
+    {
+        <nav class="pagination-controls" aria-label="Páginas de Pokémon">
+            @if (grid.HasPrevious)
+            {
+                <a href="@PageUrl(currentPage - 1)">Anterior</a>
+            }
+            else
+            {
+                <span class="pagination-disabled" aria-disabled="true">Anterior</span>
+            }
 
-        @if (Model.PokemonGrid.HasNext)
-        {
-            <a asp-controller="Pokemon"
-               asp-action="Paginated"
-               asp-route-nameFilter="@Model.NameFilter"
-               asp-route-speciesFilter="@Model.SpeciesFilter"
-               asp-route-limit="@Model.PokemonGrid.Limit"
-               asp-route-offset="@(Model.PokemonGrid.Offset + Model.PokemonGrid.Limit)">
-                Siguiente
-            </a>
-        } else
-        {
-            <span class="pagination-disabled" role="link" aria-disabled="true">
-                Siguiente
-            </span>
-        }
-    </nav>
+            @foreach (var pageNumber in pages)
+            {
+                if (pageNumber > previousPage + 1)
+                {
+                    <span class="pagination-ellipsis" aria-hidden="true">…</span>
+                }
+
+                if (pageNumber == currentPage)
+                {
+                    <span class="pagination-current" aria-current="page">@pageNumber</span>
+                }
+                else
+                {
+                    <a href="@PageUrl(pageNumber)"
+                       aria-label="Página @pageNumber">@pageNumber</a>
+                }
+
+                previousPage = pageNumber;
+            }
+
+            @if (grid.HasNext)
+            {
+                <a href="@PageUrl(currentPage + 1)">Siguiente</a>
+            }
+            else
+            {
+                <span class="pagination-disabled" aria-disabled="true">Siguiente</span>
+            }
+        </nav>
+    }
 }
 
