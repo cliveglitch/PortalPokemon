@@ -93,17 +93,11 @@
                 <button type="submit">Enviar página</button>
             </div>
 
-            <input type="hidden" name="limit"
-                   value="@Model.PokemonGrid.Limit" />
+            <input type="hidden" name="limit" value="@Model.PokemonGrid.Limit" />
+            <input type="hidden" name="offset" value="@Model.PokemonGrid.Offset" />
+            <input type="hidden" name="nameFilter" value="@Model.NameFilter" />
+            <input type="hidden" name="speciesFilter" value="@Model.SpeciesFilter" />
 
-            <input type="hidden" name="offset"
-                   value="@Model.PokemonGrid.Offset" />
-
-            <input type="hidden" name="nameFilter"
-                   value="@Model.NameFilter" />
-
-            <input type="hidden" name="speciesFilter"
-                   value="@Model.SpeciesFilter" />
         </form>
     </div>
 

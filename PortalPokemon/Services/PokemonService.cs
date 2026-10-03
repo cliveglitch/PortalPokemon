@@ -28,6 +28,18 @@ namespace PortalPokemon.Services
         }
 
         /// <summary>
+        /// Obtiene la especie de un Pokémon por su nombre desde la API de PokeAPI.
+        /// </summary>
+        /// <param name="name">El nombre de la especie de Pokémon.</param>
+        /// <param name="cancellationToken">El token de cancelación.</param>
+        /// <returns>La información de la especie de Pokémon o null si no se encuentra.</returns>
+        public async Task<PokemonSpeciesModel?> GetPokemonSpeciesAsync(string name, CancellationToken cancellationToken)
+        {
+            var species = await _pokeApiClient.GetPokemonSpeciesAsync(name, cancellationToken);
+            return species;
+        }
+
+        /// <summary>
         /// Obtiene una lista paginada de Pokémon desde la API de PokeAPI, con la opción de filtrar por nombre.
         /// </summary>
         /// <param name="limit">El número de Pokémon a obtener.</param>

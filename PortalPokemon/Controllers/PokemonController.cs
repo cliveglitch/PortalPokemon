@@ -17,7 +17,7 @@ namespace PortalPokemon.Controllers
             _emailService = emailService;
         }
 
-        public async Task<IActionResult> Details(string name, CancellationToken cancellationToken)
+        public async Task<IActionResult> Details(string name, CancellationToken cancellationToken, string? returnUrl = null)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
@@ -31,7 +31,25 @@ namespace PortalPokemon.Controllers
                 return NotFound();
             }
 
-            return View(pokemon);
+            if (pokemon.Species == null || string.IsNullOrWhiteSpace(pokemon.Species.Name))
+            {
+                return NotFound("Pokemon species information is missing.");
+            }
+
+            var species = await _pokemonService.GetPokemonSpeciesAsync(pokemon.Species.Name, cancellationToken);
+
+            if (species == null)
+            {
+                return NotFound();
+            }
+
+            return View(new PokemonDetailModel { 
+                Pokemon = pokemon, 
+                Species = species,
+                ReturnUrl = Url.IsLocalUrl(returnUrl)
+                    ? returnUrl!
+                    : Url.Action(nameof(Paginated)) ?? "/"
+            });
         }
 
         public async Task<IActionResult> Paginated(int limit = 30, int offset = 0, string? nameFilter = null, string? speciesFilter = null, CancellationToken cancellationToken = default)
@@ -79,7 +97,7 @@ namespace PortalPokemon.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SendEmail(string recipientEmail, string pokemonName, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> SendEmail(string recipientEmail, string pokemonName, string? returnUrl = null, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(recipientEmail))
             {
@@ -99,8 +117,19 @@ namespace PortalPokemon.Controllers
                 {
                     return NotFound($"Pokemon '{pokemonName}' not found.");
                 }
+                var species = await _pokemonService.GetPokemonSpeciesAsync(pokemon.Species?.Name ?? string.Empty, cancellationToken);
+                if (species == null)
+                {
+                    return NotFound($"Species for Pokemon '{pokemonName}' not found.");
+                }
 
-                await _emailService.SendDetailPokemonAsync(recipientEmail, pokemon, cancellationToken);
+                var pokemonDetailModel = new PokemonDetailModel
+                {
+                    Pokemon = pokemon,
+                    Species = species
+                };
+
+                await _emailService.SendDetailPokemonAsync(recipientEmail, pokemonDetailModel, cancellationToken);
 
                 TempData["ToastMessage"] = "Correo enviado exitosamente.";
                 TempData["ToastType"] = "success";
@@ -110,7 +139,8 @@ namespace PortalPokemon.Controllers
                 TempData["ToastMessage"] = $"Error al enviar el correo: {ex.Message}";
                 TempData["ToastType"] = "error";
             }
-            return RedirectToAction(nameof(Details), new { name = pokemonName });
+
+            return RedirectToAction(nameof(Details), new { name = pokemonName, returnUrl });
         }
 
         [HttpPost]

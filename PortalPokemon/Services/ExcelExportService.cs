@@ -25,7 +25,7 @@ namespace PortalPokemon.Services
             {
                 var worksheet = workbook.Worksheets.Add("Pokemons");
 
-                worksheet.Cell(1, 1).Value = "Name";
+                worksheet.Cell(1, 1).Value = "Nombre";
                 worksheet.Cell(1,2).Value = "Sprite";
                 for (int i = 0; i < pokemons.Count; i++)
                 {

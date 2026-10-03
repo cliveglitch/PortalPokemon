@@ -42,8 +42,7 @@ namespace PortalPokemon.Clients
                 return cachedPokemon;
             }
 
-            using var response = await _httpClient.GetAsync(
-                $"pokemon/{name}", cancellationToken);
+            using var response = await _httpClient.GetAsync($"pokemon/{name}", cancellationToken);
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -64,6 +63,54 @@ namespace PortalPokemon.Clients
             }
 
             return pokemon;
+        }
+
+        /// <summary>
+        /// Obtenemos la información de una especie de Pokémon por su nombre.
+        /// </summary>
+        /// <param name="name">El nombre de la especie de Pokémon.</param>
+        /// <param name="cancellationToken">El token de cancelación.</param>
+        /// <returns>La información de la especie de Pokémon o null si no se encuentra.</returns>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="Exception"></exception>
+        public async Task<PokemonSpeciesModel?> GetPokemonSpeciesAsync(string name, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentException("Pokemon species name cannot be null or whitespace.", nameof(name));
+            }
+
+            name = name.Trim().ToLowerInvariant();
+            var cacheKey = $"pokemon_species:{name}";
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (_cache.TryGetValue<PokemonSpeciesModel>(cacheKey, out var cachedSpecies))
+            {
+                return cachedSpecies;
+            }
+
+            using var response = await _httpClient.GetAsync($"pokemon-species/{name}", cancellationToken);
+
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Error fetching Pokemon species data: {response.StatusCode} - {content}");
+            }
+
+            var species = System.Text.Json.JsonSerializer.Deserialize<PokemonSpeciesModel>(content);
+
+            if (species is not null)
+            {
+                _cache.Set(cacheKey, species, TimeSpan.FromHours(6));
+            }
+
+            return species;
         }
 
         /// <summary>

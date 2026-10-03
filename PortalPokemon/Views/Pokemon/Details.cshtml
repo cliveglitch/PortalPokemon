@@ -1,9 +1,19 @@
-﻿@model PokemonModel
+﻿@model PokemonDetailModel
 
 @{
-    var sprite = string.IsNullOrWhiteSpace(Model.Sprites.FrontDefault)
+    var sprite = string.IsNullOrWhiteSpace(Model.Pokemon.Sprites.FrontDefault)
         ? Url.Content("~/images/missing-pokemon-sprite.webp")
-        : Model.Sprites.FrontDefault;
+        : Model.Pokemon.Sprites.FrontDefault;
+
+    var captureRate = Model.Species.CaptureRate?.ToString()
+    ?? "No disponible";
+
+    var genderRate = Model.Species.GenderRate switch
+    {
+        null => "No disponible",
+        -1 => "Sin género",
+        int rate => $"{rate * 12.5m:0.#}% hembra"
+    };
 }
 
 @if (TempData["ToastMessage"] is string message)
@@ -21,10 +31,11 @@
 
 <div class="pokemon-toolbar">
 
-    <a asp-controller="Pokemon" asp-action="Paginated">← Volver al listado</a>
+    <a href="@Model.ReturnUrl">← Volver al listado</a>
     @* Email *@
     <form asp-controller="Pokemon"
           asp-action="SendEmail"
+
           method="post"
           asp-antiforgery="true"
           class="pokemon-email">
@@ -43,42 +54,64 @@
             <button type="submit">Enviar pokemon</button>
         </div>
 
-        <input type="hidden" name="pokemonName"
-               value="@Model.Name" />
+        <input type="hidden" name="pokemonName" value="@Model.Pokemon.Name" />
+        <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+
     </form>
 </div>
 
 <div class="pokemon-details">
 
     <article>
-        <img src="@sprite" alt="@Model.Name" />
+        <img src="@sprite" alt="@Model.Pokemon.Name" />
 
         <div>
-            <h2>@Model.Name <small>#@Model.Id.ToString("D3")</small></h2>
+            <h2>@Model.Pokemon.Name <small>#@Model.Pokemon.Id.ToString("D3")</small></h2>
 
             <p class="pokemon-details-types">
-                @foreach (var type in Model.Types.OrderBy(t => t.Slot))
+                @foreach (var type in Model.Pokemon.Types.OrderBy(t => t.Slot))
                 {
                     <span>@type.Type.Name</span>
                 }
             </p>
 
             <dl>
-                <dt>Especie</dt>
-                <dd>@(Model.Species.Name ?? "No disponible")</dd>
 
                 <dt>Altura</dt>
                 <dd>
-                    @(Model.Height is int h ? $"{h / 10m:0.#} m" : "No disponible")
+                    @(Model.Pokemon.Height is int h ? $"{h / 10m:0.#} m" : "No disponible")
                 </dd>
 
                 <dt>Peso</dt>
                 <dd>
-                    @(Model.Weight is int w ? $"{w / 10m:0.#} kg" : "No disponible")
+                    @(Model.Pokemon.Weight is int w ? $"{w / 10m:0.#} kg" : "No disponible")
                 </dd>
 
                 <dt>Experiencia base</dt>
-                <dd>@(Model.BaseExperience?.ToString() ?? "No disponible")</dd>
+                <dd>@(Model.Pokemon.BaseExperience?.ToString() ?? "No disponible")</dd>
+
+                <hr /><hr />
+
+                <dt>Especie</dt>
+                <dd>@Model.Species.Name</dd>
+
+                <dt>Tasa de captura</dt>
+                <dd>@captureRate</dd>
+
+                <dt>Género</dt>
+                <dd>@genderRate</dd>
+
+                <dt>Contador de eclosión</dt>
+                <dd>@(Model.Species.HatchCounter is int hc ? $"{hc} ciclos" : "No disponible")</dd>
+
+                <dt>Bebé</dt>
+                <dd>@(Model.Species.IsBaby ? "Sí" : "No")</dd>
+
+                <dt>Legendario</dt>
+                <dd>@(Model.Species.IsLegendary ? "Sí" : "No")</dd>
+
+                <dt>Mítico</dt>
+                <dd>@(Model.Species.IsMythical ? "Sí" : "No")</dd>
             </dl>
         </div>
     </article>

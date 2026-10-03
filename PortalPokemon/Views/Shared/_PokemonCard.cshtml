@@ -1,8 +1,14 @@
 ﻿@model PokemonModel
+
+@{
+    var returnUrl = $"{Context.Request.PathBase}{Context.Request.Path}{Context.Request.QueryString}";
+}
+
 <a class="pokemon-card"
    asp-controller="Pokemon"
    asp-action="Details"
-   asp-route-name="@Model.Name">
+   asp-route-name="@Model.Name"
+   asp-route-returnUrl="@returnUrl">
     <div class="pokemon-card-image">
         @if (Model.Sprites.FrontDefault is null)
         {

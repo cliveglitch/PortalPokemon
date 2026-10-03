@@ -1,11 +1,12 @@
-﻿using System.Net;
-using System.Text;
+﻿using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using PortalPokemon.Configuration;
 using PortalPokemon.Models;
+using System.Net;
+using System.Text;
 
 namespace PortalPokemon.Services
 {
@@ -30,7 +31,7 @@ namespace PortalPokemon.Services
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(_smtpSettings.FromName, _smtpSettings.FromEmail));
             message.To.Add(new MailboxAddress("", recipientEmail));
-            message.Subject = "Pokémon Report";
+            message.Subject = "Listado Pokemon";
 
             var bodyBuilder = new BodyBuilder();
             bodyBuilder.HtmlBody = GeneratePokemonReport(pokemons);
@@ -46,15 +47,15 @@ namespace PortalPokemon.Services
         /// <param name="pokemon">El Pokémon para el cual enviar detalles.</param>
         /// <param name="cancellationToken">El token de cancelación.</param>
         /// <returns></returns>
-        public Task SendDetailPokemonAsync(string recipientEmail, PokemonModel pokemon, CancellationToken cancellationToken = default)
+        public Task SendDetailPokemonAsync(string recipientEmail, PokemonDetailModel detail, CancellationToken cancellationToken = default)
         {
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(_smtpSettings.FromName, _smtpSettings.FromEmail));
             message.To.Add(new MailboxAddress("", recipientEmail));
-            message.Subject = $"Pokémon Detail: {pokemon.Name}";
+            message.Subject = $"Pokemon: {detail.Pokemon.Name}";
 
             var bodyBuilder = new BodyBuilder();
-            bodyBuilder.HtmlBody = GeneratePokemonDetailReport(pokemon);
+            bodyBuilder.HtmlBody = GeneratePokemonDetailReport(detail);
             message.Body = bodyBuilder.ToMessageBody();
 
             return SendEmailAsync(message, cancellationToken);
@@ -128,24 +129,38 @@ namespace PortalPokemon.Services
         /// </summary>
         /// <param name="pokemon">El Pokémon para el cual generar el informe.</param>
         /// <returns>El HTML del informe detallado.</returns>
-        private string GeneratePokemonDetailReport(PokemonModel pokemon)
+        private string GeneratePokemonDetailReport(PokemonDetailModel detail)
         {
-            var name = WebUtility.HtmlEncode(pokemon.Name ?? "No disponible");
-            var species = WebUtility.HtmlEncode(pokemon.Species.Name ?? "No disponible");
+            var name = WebUtility.HtmlEncode(detail.Pokemon.Name ?? "No disponible");
+            var speciesName = WebUtility.HtmlEncode(detail.Species.Name ?? "No disponible");
 
-            var height = pokemon.Height is int h ? $"{h / 10m:0.#} m" : "No disponible";
-            var weight = pokemon.Weight is int w ? $"{w / 10m:0.#} kg" : "No disponible";
-            var experience = pokemon.BaseExperience?.ToString() ?? "No disponible";
+            var height = detail.Pokemon.Height is int h ? $"{h / 10m:0.#} m" : "No disponible";
+            var weight = detail.Pokemon.Weight is int w ? $"{w / 10m:0.#} kg" : "No disponible";
+            var experience = detail.Pokemon.BaseExperience?.ToString() ?? "No disponible";
 
-            var image = string.IsNullOrWhiteSpace(pokemon.Sprites.FrontDefault)
+            var captureRate = detail.Species.CaptureRate?.ToString() ?? "No disponible";
+
+            var genderRate = detail.Species.GenderRate switch
+            {
+                null => "No disponible",
+                -1 => "Sin género",
+                int rate => $"{rate * 12.5m:0.#}% hembra"
+            };
+
+            var hatchCounter = detail.Species.HatchCounter is int hc ? $"{hc} ciclos" : "No disponible";
+            var isBaby = detail.Species.IsBaby ? "Sí" : "No";
+            var isLegendary = detail.Species.IsLegendary ? "Sí" : "No";
+            var isMythical = detail.Species.IsMythical ? "Sí" : "No";
+
+            var image = string.IsNullOrWhiteSpace(detail.Pokemon.Sprites.FrontDefault)
                 ? "<p>Sin imagen</p>"
                 : $"""
-                    <img src="{WebUtility.HtmlEncode(pokemon.Sprites.FrontDefault)}"
+                    <img src="{WebUtility.HtmlEncode(detail.Pokemon.Sprites.FrontDefault)}"
                          alt="{name}" width="160" height="160"
                          style="display:block; border:0; image-rendering:pixelated;" />
                     """;
 
-            var types = string.Join(" ", pokemon.Types.OrderBy(t => t.Slot).Select(t =>
+            var types = string.Join(" ", detail.Pokemon.Types.OrderBy(t => t.Slot).Select(t =>
                 $"""
                     <span style="display:inline-block; padding:4px 12px; margin-right:4px;
                                  border:1px solid #d5e1f5; border-radius:20px;
@@ -174,17 +189,13 @@ namespace PortalPokemon.Services
                                            text-transform:capitalize;">
                                     {name}
                                     <small style="color:#626b78; font-size:14px;">
-                                        #{pokemon.Id:D3}
+                                        #{detail.Pokemon.Id:D3}
                                     </small>
                                 </h2>
 
                                 <p style="margin:12px 0;">{types}</p>
 
-                                <table cellspacing="0" cellpadding="4">
-                                    <tr>
-                                        <th scope="row" align="left">Especie</th>
-                                        <td>{species}</td>
-                                    </tr>
+                                <table width="100%" cellspacing="0" cellpadding="4">
                                     <tr>
                                         <th scope="row" align="left">Altura</th>
                                         <td>{height}</td>
@@ -196,6 +207,41 @@ namespace PortalPokemon.Services
                                     <tr>
                                         <th scope="row" align="left">Experiencia base</th>
                                         <td>{experience}</td>
+                                    </tr>
+
+                                    <tr>
+                                        <td colspan="2" style="padding:16px 0;">
+                                            <div style="border-top:1px solid #dce1e7;"></div>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th scope="row" align="left">Especie</th>
+                                        <td>{speciesName}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row" align="left">Tasa de captura</th>
+                                        <td>{captureRate}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row" align="left">Tasa de género</th>
+                                        <td>{genderRate}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row" align="left">Contador de eclosión</th>
+                                        <td>{hatchCounter}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row" align="left">Bebé</th>
+                                        <td>{isBaby}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row" align="left">Legendario</th>
+                                        <td>{isLegendary}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row" align="left">Mítico</th>
+                                        <td>{isMythical}</td>
                                     </tr>
                                 </table>
                             </td>
