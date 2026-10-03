@@ -1,0 +1,85 @@
+﻿@model PokemonModel
+
+@{
+    var sprite = string.IsNullOrWhiteSpace(Model.Sprites.FrontDefault)
+        ? Url.Content("~/images/missing-pokemon-sprite.webp")
+        : Model.Sprites.FrontDefault;
+}
+
+@if (TempData["ToastMessage"] is string message)
+{
+    <div class="email-toast @TempData["ToastType"]" role="status">
+        <span>@message</span>
+
+        <button type="button"
+                aria-label="Cerrar"
+                onclick="this.parentElement.remove()">
+            ×
+        </button>
+    </div>
+}
+
+<div class="pokemon-toolbar">
+
+    <a asp-controller="Pokemon" asp-action="Paginated">← Volver al listado</a>
+    @* Email *@
+    <form asp-controller="Pokemon"
+          asp-action="SendEmail"
+          method="post"
+          asp-antiforgery="true"
+          class="pokemon-email">
+
+        <label for="recipient-email">Correo</label>
+
+        <div class="email-controls">
+            <input type="email"
+                   id="recipient-email"
+                   name="recipientEmail"
+                   value="@TempData["RecipientEmail"]"
+                   placeholder="correo@ejemplo.com"
+                   autocomplete="email"
+                   required />
+
+            <button type="submit">Enviar pokemon</button>
+        </div>
+
+        <input type="hidden" name="pokemonName"
+               value="@Model.Name" />
+    </form>
+</div>
+
+<div class="pokemon-details">
+
+    <article>
+        <img src="@sprite" alt="@Model.Name" />
+
+        <div>
+            <h2>@Model.Name <small>#@Model.Id.ToString("D3")</small></h2>
+
+            <p class="pokemon-details-types">
+                @foreach (var type in Model.Types.OrderBy(t => t.Slot))
+                {
+                    <span>@type.Type.Name</span>
+                }
+            </p>
+
+            <dl>
+                <dt>Especie</dt>
+                <dd>@(Model.Species.Name ?? "No disponible")</dd>
+
+                <dt>Altura</dt>
+                <dd>
+                    @(Model.Height is int h ? $"{h / 10m:0.#} m" : "No disponible")
+                </dd>
+
+                <dt>Peso</dt>
+                <dd>
+                    @(Model.Weight is int w ? $"{w / 10m:0.#} kg" : "No disponible")
+                </dd>
+
+                <dt>Experiencia base</dt>
+                <dd>@(Model.BaseExperience?.ToString() ?? "No disponible")</dd>
+            </dl>
+        </div>
+    </article>
+</div>

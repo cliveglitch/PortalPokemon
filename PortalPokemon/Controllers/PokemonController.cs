@@ -25,21 +25,13 @@ namespace PortalPokemon.Controllers
             }
 
             var pokemon = await _pokemonService.GetPokemonAsync(name.Trim(), cancellationToken);
+
             if (pokemon == null)
             {
                 return NotFound();
             }
 
-            var items = new PokePortalModel
-            {
-                PokemonGrid = new PaginatedPokemonModel
-                {
-                    Count = 1,
-                    Pokemons = new List<PokemonModel> { pokemon }
-                }
-            };
-
-            return View("~/Views/Home/Index.cshtml", items);
+            return View(pokemon);
         }
 
         public async Task<IActionResult> Paginated(int limit = 30, int offset = 0, string? nameFilter = null, string? speciesFilter = null, CancellationToken cancellationToken = default)
@@ -87,7 +79,43 @@ namespace PortalPokemon.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SendEmail(string recipientEmail, int limit = 30, int offset = 0, string? nameFilter = null, string? speciesFilter = null, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> SendEmail(string recipientEmail, string pokemonName, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(recipientEmail))
+            {
+                return BadRequest("Recipient email is required.");
+            }
+            if (string.IsNullOrWhiteSpace(pokemonName))
+            {
+                return BadRequest("Pokemon name is required.");
+            }
+
+            TempData["RecipientEmail"] = recipientEmail;
+
+            try
+            {
+                var pokemon = await _pokemonService.GetPokemonAsync(pokemonName.Trim(), cancellationToken);
+                if (pokemon == null)
+                {
+                    return NotFound($"Pokemon '{pokemonName}' not found.");
+                }
+
+                await _emailService.SendDetailPokemonAsync(recipientEmail, pokemon, cancellationToken);
+
+                TempData["ToastMessage"] = "Correo enviado exitosamente.";
+                TempData["ToastType"] = "success";
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException || ex is TaskCanceledException)
+            {
+                TempData["ToastMessage"] = $"Error al enviar el correo: {ex.Message}";
+                TempData["ToastType"] = "error";
+            }
+            return RedirectToAction(nameof(Details), new { name = pokemonName });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SendManyEmail(string recipientEmail, int limit = 30, int offset = 0, string? nameFilter = null, string? speciesFilter = null, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(recipientEmail))
             {
@@ -120,7 +148,7 @@ namespace PortalPokemon.Controllers
                 TempData["ToastMessage"] = "Correo enviado exitosamente.";
                 TempData["ToastType"] = "success";
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
+            catch (Exception ex) when (ex is not OperationCanceledException  || ex is TaskCanceledException)
             {
                 TempData["ToastMessage"] = $"Error al enviar el correo: {ex.Message}";
                 TempData["ToastType"] = "error";

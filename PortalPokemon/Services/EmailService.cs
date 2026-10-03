@@ -40,6 +40,27 @@ namespace PortalPokemon.Services
         }
 
         /// <summary>
+        /// Envía un correo electrónico con los detalles de un Pokémon específico.
+        /// </summary>
+        /// <param name="recipientEmail">La dirección de correo del destinatario.</param>
+        /// <param name="pokemon">El Pokémon para el cual enviar detalles.</param>
+        /// <param name="cancellationToken">El token de cancelación.</param>
+        /// <returns></returns>
+        public Task SendDetailPokemonAsync(string recipientEmail, PokemonModel pokemon, CancellationToken cancellationToken = default)
+        {
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(_smtpSettings.FromName, _smtpSettings.FromEmail));
+            message.To.Add(new MailboxAddress("", recipientEmail));
+            message.Subject = $"Pokémon Detail: {pokemon.Name}";
+
+            var bodyBuilder = new BodyBuilder();
+            bodyBuilder.HtmlBody = GeneratePokemonDetailReport(pokemon);
+            message.Body = bodyBuilder.ToMessageBody();
+
+            return SendEmailAsync(message, cancellationToken);
+        }
+
+        /// <summary>
         /// Genera un grid HTML de los Pokémon proporcionados.
         /// </summary>
         /// <param name="pokemons">La lista de Pokémon para incluir en el informe.</param>
@@ -100,6 +121,89 @@ namespace PortalPokemon.Services
 
             html.Append("</table></body></html>");
             return html.ToString();
+        }
+
+        /// <summary>
+        /// Genera un informe detallado en HTML para un Pokémon específico.
+        /// </summary>
+        /// <param name="pokemon">El Pokémon para el cual generar el informe.</param>
+        /// <returns>El HTML del informe detallado.</returns>
+        private string GeneratePokemonDetailReport(PokemonModel pokemon)
+        {
+            var name = WebUtility.HtmlEncode(pokemon.Name ?? "No disponible");
+            var species = WebUtility.HtmlEncode(pokemon.Species.Name ?? "No disponible");
+
+            var height = pokemon.Height is int h ? $"{h / 10m:0.#} m" : "No disponible";
+            var weight = pokemon.Weight is int w ? $"{w / 10m:0.#} kg" : "No disponible";
+            var experience = pokemon.BaseExperience?.ToString() ?? "No disponible";
+
+            var image = string.IsNullOrWhiteSpace(pokemon.Sprites.FrontDefault)
+                ? "<p>Sin imagen</p>"
+                : $"""
+                    <img src="{WebUtility.HtmlEncode(pokemon.Sprites.FrontDefault)}"
+                         alt="{name}" width="160" height="160"
+                         style="display:block; border:0; image-rendering:pixelated;" />
+                    """;
+
+            var types = string.Join(" ", pokemon.Types.OrderBy(t => t.Slot).Select(t =>
+                $"""
+                    <span style="display:inline-block; padding:4px 12px; margin-right:4px;
+                                 border:1px solid #d5e1f5; border-radius:20px;
+                                 background:#eaf0fb; color:#2456a6; font-size:13px;
+                                 text-transform:capitalize;">
+                        {WebUtility.HtmlEncode(t.Type.Name)}
+                    </span>
+                 """));
+
+            return ($"""
+                <!DOCTYPE html>
+                <html lang="es">
+                <body style="margin:0; padding:16px; background:#f5f7fb;
+                             color:#172033; font-family:Arial,sans-serif;">
+
+                    <table role="presentation" align="center" width="100%"
+                           cellspacing="0" cellpadding="20"
+                           style="max-width:680px; background:white;
+                                  border:1px solid #dce1e7; border-radius:12px;">
+                        <tr>
+                            <td width="160" align="center" valign="middle">
+                                {image}
+                            </td>
+                            <td valign="middle">
+                                <h2 style="margin:0; color:#2456a6;
+                                           text-transform:capitalize;">
+                                    {name}
+                                    <small style="color:#626b78; font-size:14px;">
+                                        #{pokemon.Id:D3}
+                                    </small>
+                                </h2>
+
+                                <p style="margin:12px 0;">{types}</p>
+
+                                <table cellspacing="0" cellpadding="4">
+                                    <tr>
+                                        <th scope="row" align="left">Especie</th>
+                                        <td>{species}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row" align="left">Altura</th>
+                                        <td>{height}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row" align="left">Peso</th>
+                                        <td>{weight}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row" align="left">Experiencia base</th>
+                                        <td>{experience}</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </body>
+                </html>
+             """);
         }
 
         /// <summary>

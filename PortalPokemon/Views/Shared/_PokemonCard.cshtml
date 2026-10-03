@@ -1,5 +1,8 @@
 ﻿@model PokemonModel
-<article class="pokemon-card">
+<a class="pokemon-card"
+   asp-controller="Pokemon"
+   asp-action="Details"
+   asp-route-name="@Model.Name">
     <div class="pokemon-card-image">
         @if (Model.Sprites.FrontDefault is null)
         {
@@ -11,4 +14,4 @@
         }
     </div> 
     <h2>@Model.Name</h2>
-</article>
+</a>
