@@ -1,4 +1,5 @@
 ﻿using PortalPokemon.Models;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace PortalPokemon.Clients
 {
@@ -8,10 +9,12 @@ namespace PortalPokemon.Clients
     public class PokeApiClient
     {
         private readonly HttpClient _httpClient;
+        private readonly IMemoryCache _cache;
 
-        public PokeApiClient(HttpClient httpClient)
+        public PokeApiClient(HttpClient httpClient, IMemoryCache cache)
         {
             _httpClient = httpClient;
+            _cache = cache;
         }
 
         /// <summary>
@@ -29,12 +32,18 @@ namespace PortalPokemon.Clients
                 throw new ArgumentException("Pokemon name cannot be null or whitespace.", nameof(name));
             }
 
-            Console.WriteLine($"Starting download: {name}");
+            name = name.Trim().ToLowerInvariant();
+            var cacheKey = $"pokemon:{name}";
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (_cache.TryGetValue<PokemonModel>(cacheKey, out var cachedPokemon))
+            {
+                return cachedPokemon;
+            }
 
             using var response = await _httpClient.GetAsync(
                 $"pokemon/{name}", cancellationToken);
-
-            Console.WriteLine($"Finished download: {name}");
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -49,6 +58,11 @@ namespace PortalPokemon.Clients
 
             var pokemon = System.Text.Json.JsonSerializer.Deserialize<PokemonModel>(content);
 
+            if (pokemon is not null)
+            {
+                _cache.Set(cacheKey, pokemon, TimeSpan.FromHours(6));
+            }
+
             return pokemon;
         }
 
@@ -62,6 +76,14 @@ namespace PortalPokemon.Clients
         /// <exception cref="Exception"></exception>
         public async Task<PaginatedPokemonResponseModel?> GetPaginatedPokemonAsync(int limit, int offset, CancellationToken cancellationToken)
         {
+            var cacheKey = $"paginated_pokemon:{limit}:{offset}";
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (_cache.TryGetValue<PaginatedPokemonResponseModel>(cacheKey, out var cachedPaginatedPokemon))
+            {
+                return cachedPaginatedPokemon;
+            }
+
             using var response = await _httpClient.GetAsync($"pokemon?limit={limit}&offset={offset}", cancellationToken);
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
@@ -71,6 +93,12 @@ namespace PortalPokemon.Clients
             }
 
             var paginatedPokemon = System.Text.Json.JsonSerializer.Deserialize<PaginatedPokemonResponseModel>(content);
+
+            if (paginatedPokemon is not null)
+            {
+                _cache.Set(cacheKey, paginatedPokemon, TimeSpan.FromHours(6));
+            }
+
             return paginatedPokemon;
         }
     }

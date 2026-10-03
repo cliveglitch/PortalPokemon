@@ -17,6 +17,7 @@ builder.Services.AddHttpClient<PokeApiClient>(client =>
         DecompressionMethods.GZip | DecompressionMethods.Deflate
 });
 builder.Services.AddScoped<PokemonService>();
+builder.Services.AddMemoryCache();
 
 var app = builder.Build();
 
