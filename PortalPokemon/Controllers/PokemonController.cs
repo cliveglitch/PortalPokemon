@@ -8,11 +8,13 @@ namespace PortalPokemon.Controllers
     {
         private readonly PokemonService _pokemonService;
         private readonly ExcelExportService _excelExportService;
+        private readonly EmailService _emailService;
 
-        public PokemonController(PokemonService pokemonService, ExcelExportService excelExportService)
+        public PokemonController(PokemonService pokemonService, ExcelExportService excelExportService, EmailService emailService)
         {
             _pokemonService = pokemonService;
             _excelExportService = excelExportService;
+            _emailService = emailService;
         }
 
         public async Task<IActionResult> Details(string name, CancellationToken cancellationToken)
@@ -80,6 +82,57 @@ namespace PortalPokemon.Controllers
             var excelData = await _excelExportService.ExportAsync(paginatedPokemon.PokemonGrid.Pokemons, cancellationToken);
 
             return File(excelData, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Pokemons.xlsx");
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SendEmail(string recipientEmail, int limit = 30, int offset = 0, string? nameFilter = null, string? speciesFilter = null, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(recipientEmail))
+            {
+                return BadRequest("Recipient email is required.");
+            }
+
+            if (limit <= 0)
+            {
+                return BadRequest("Limit must be a positive integer.");
+            }
+            if (limit > 200)
+            {
+                return BadRequest("Limit cannot exceed 200.");
+            }
+            if (offset < 0)
+            {
+                return BadRequest("Offset must be a non-negative integer.");
+            }
+
+            TempData["RecipientEmail"] = recipientEmail;
+
+            try
+            {
+                var page = await _pokemonService.GetPaginatedPokemonAsync(
+                    limit, offset, nameFilter, speciesFilter, cancellationToken);
+
+                await _emailService.SendPokemonAsync(
+                    recipientEmail, page.PokemonGrid.Pokemons, cancellationToken);
+
+                TempData["ToastMessage"] = "Correo enviado exitosamente.";
+                TempData["ToastType"] = "success";
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                TempData["ToastMessage"] = $"Error al enviar el correo: {ex.Message}";
+                TempData["ToastType"] = "error";
+            }
+
+            return RedirectToAction(nameof(Paginated), new
+            {
+                limit,
+                offset,
+                nameFilter,
+                speciesFilter
+            });
         }
     }
 }

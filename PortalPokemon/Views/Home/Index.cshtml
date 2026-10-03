@@ -4,6 +4,19 @@
 
 @model PokePortalModel
 
+@if (TempData["ToastMessage"] is string message)
+{
+    <div class="email-toast @TempData["ToastType"]" role="status">
+        <span>@message</span>
+
+        <button type="button"
+                aria-label="Cerrar"
+                onclick="this.parentElement.remove()">
+            ×
+        </button>
+    </div>
+}
+
 @if (Model is not null)
 {
     <pre id="pokemon-debug" style="display: none;">@System.Text.Json.JsonSerializer.Serialize(Model)</pre>
@@ -15,48 +28,85 @@
         console.log(pokemon);
     </script>
 
-    <form method="get" action="/" class="pokemon-search">
-        <label for="pokemon-name">Nombre</label>
-        <div class="search-bar">
-            <input type="search"
-                   id="pokemon-name"
-                   name="nameFilter"
-                   value="@Model.NameFilter"
-             />
+    <div class="pokemon-toolbar">
+        @* Filters *@
+        <form method="get" action="/" class="pokemon-search">
+            <label for="pokemon-name">Nombre</label>
+            <div class="search-bar">
+                <input type="search"
+                       id="pokemon-name"
+                       name="nameFilter"
+                       value="@Model.NameFilter" />
 
-            <button type="submit">Buscar</button>
-        </div>
+                <button type="submit">Buscar</button>
+            </div>
 
-        <div class="species-filter">
-            <label for="pokemon-species">Especie</label>
+            <div class="species-filter">
+                <label for="pokemon-species">Especie</label>
 
-            <select id="pokemon-species" name="speciesFilter">
-                <option value="">Todas las especies</option>
+                <select id="pokemon-species" name="speciesFilter">
+                    <option value="">Todas las especies</option>
 
-                @foreach (var species in Model.AvailableSpecies)
-                {
-                    <option value="@species"
-                            selected="@(species == Model.SpeciesFilter)">
-                        @species
-                    </option>
-                }
-            </select>
-        </div>
+                    @foreach (var species in Model.AvailableSpecies)
+                    {
+                        <option value="@species"
+                                selected="@(species == Model.SpeciesFilter)">
+                            @species
+                        </option>
+                    }
+                </select>
+            </div>
 
-        <a asp-controller="Pokemon"
-           asp-action="ExportToExcel"
-           asp-route-nameFilter="@Model.NameFilter"
-           asp-route-speciesFilter="@Model.SpeciesFilter"
-           asp-route-limit="@Model.PokemonGrid.Limit"
-           asp-route-offset="@Model.PokemonGrid.Offset"
-           class="export-button">
-            Descargar Excel
-        </a>
+            <a asp-controller="Pokemon"
+               asp-action="ExportToExcel"
+               asp-route-nameFilter="@Model.NameFilter"
+               asp-route-speciesFilter="@Model.SpeciesFilter"
+               asp-route-limit="@Model.PokemonGrid.Limit"
+               asp-route-offset="@Model.PokemonGrid.Offset"
+               class="export-button">
+                Descargar Excel
+            </a>
 
-        <input type="hidden" name="limit" value="@Model.PokemonGrid.Limit" />
-        <input type="hidden" name="offset" value="0" />
+            <input type="hidden" name="limit" value="@Model.PokemonGrid.Limit" />
+            <input type="hidden" name="offset" value="0" />
 
-    </form>
+        </form>
+
+        @* Email *@
+        <form asp-controller="Pokemon"
+              asp-action="SendEmail"
+              method="post"
+              asp-antiforgery="true"
+              class="pokemon-email">
+
+            <label for="recipient-email">Correo</label>
+
+            <div class="email-controls">
+                <input type="email"
+                       id="recipient-email"
+                       name="recipientEmail"
+                       value="@TempData["RecipientEmail"]"
+                       placeholder="correo@ejemplo.com"
+                       autocomplete="email"
+                       required />
+
+                <button type="submit">Enviar página</button>
+            </div>
+
+            <input type="hidden" name="limit"
+                   value="@Model.PokemonGrid.Limit" />
+
+            <input type="hidden" name="offset"
+                   value="@Model.PokemonGrid.Offset" />
+
+            <input type="hidden" name="nameFilter"
+                   value="@Model.NameFilter" />
+
+            <input type="hidden" name="speciesFilter"
+                   value="@Model.SpeciesFilter" />
+        </form>
+    </div>
+
 
     <div class="pokemon-grid">
         @foreach (var pokemon in Model.PokemonGrid.Pokemons)

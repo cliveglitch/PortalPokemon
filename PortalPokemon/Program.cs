@@ -1,4 +1,5 @@
 using PortalPokemon.Clients;
+using PortalPokemon.Configuration;
 using PortalPokemon.Services;
 using System.Net;
 
@@ -17,7 +18,10 @@ builder.Services.AddHttpClient<PokeApiClient>(client =>
         DecompressionMethods.GZip | DecompressionMethods.Deflate
 });
 builder.Services.AddScoped<PokemonService>();
+builder.Services.AddScoped<EmailService>();
 builder.Services.AddHttpClient<ExcelExportService>();
+builder.Services.Configure<SmtpSettings>(
+    builder.Configuration.GetSection("Smtp"));
 builder.Services.AddMemoryCache();
 
 var app = builder.Build();

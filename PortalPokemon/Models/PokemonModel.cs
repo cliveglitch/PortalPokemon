@@ -9,11 +9,11 @@ namespace PortalPokemon.Models
         [JsonPropertyName("name")]
         public string? Name { get; set; }
         [JsonPropertyName("height")]
-        public int Height { get; set; }
+        public int? Height { get; set; }
         [JsonPropertyName("base_experience")]
-        public int BaseExperience { get; set; }
+        public int? BaseExperience { get; set; }
         [JsonPropertyName("weight")]
-        public int Weight { get; set; }
+        public int? Weight { get; set; }
 
         [JsonPropertyName("types")]
         public PokemonFormTypeModel[] Types { get; set; } = Array.Empty<PokemonFormTypeModel>();
