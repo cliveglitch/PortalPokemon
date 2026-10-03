@@ -16,22 +16,22 @@
     </script>
 
     <form method="get" action="/" class="pokemon-search">
-        <label for="pokemon-name">Name</label>
+        <label for="pokemon-name">Nombre</label>
         <div class="search-bar">
             <input type="search"
                    id="pokemon-name"
                    name="nameFilter"
                    value="@Model.NameFilter"
-                   placeholder="Search Pokémon…" />
+             />
 
-            <button type="submit">Search</button>
+            <button type="submit">Buscar</button>
         </div>
 
         <div class="species-filter">
-            <label for="pokemon-species">Species</label>
+            <label for="pokemon-species">Especie</label>
 
             <select id="pokemon-species" name="speciesFilter">
-                <option value="">All species</option>
+                <option value="">Todas las especies</option>
 
                 @foreach (var species in Model.AvailableSpecies)
                 {
@@ -42,6 +42,16 @@
                 }
             </select>
         </div>
+
+        <a asp-controller="Pokemon"
+           asp-action="ExportToExcel"
+           asp-route-nameFilter="@Model.NameFilter"
+           asp-route-speciesFilter="@Model.SpeciesFilter"
+           asp-route-limit="@Model.PokemonGrid.Limit"
+           asp-route-offset="@Model.PokemonGrid.Offset"
+           class="export-button">
+            Descargar Excel
+        </a>
 
         <input type="hidden" name="limit" value="@Model.PokemonGrid.Limit" />
         <input type="hidden" name="offset" value="0" />
@@ -64,12 +74,12 @@
                asp-route-speciesFilter="@Model.SpeciesFilter"
                asp-route-limit="@Model.PokemonGrid.Limit"
                asp-route-offset="@(Math.Max(0, Model.PokemonGrid.Offset - Model.PokemonGrid.Limit))">
-                Previous
+                Anterior
             </a>
         } else
         {
             <span class="pagination-disabled" role="link" aria-disabled="true">
-                Previous
+                Anterior
             </span>
         }
 
@@ -81,12 +91,12 @@
                asp-route-speciesFilter="@Model.SpeciesFilter"
                asp-route-limit="@Model.PokemonGrid.Limit"
                asp-route-offset="@(Model.PokemonGrid.Offset + Model.PokemonGrid.Limit)">
-                Next
+                Siguiente
             </a>
         } else
         {
             <span class="pagination-disabled" role="link" aria-disabled="true">
-                Next
+                Siguiente
             </span>
         }
     </nav>

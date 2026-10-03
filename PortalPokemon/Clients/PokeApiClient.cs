@@ -187,7 +187,7 @@ namespace PortalPokemon.Clients
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (_cache.TryGetValue<IReadOnlyList<PaginatedPokemonResultModel>>(cacheKey, out var cachedPokemonBySpecies))
+            if (_cache.TryGetValue<IReadOnlyList<PaginatedPokemonResultModel>>(cacheKey, out var cachedPokemonBySpecies) && cachedPokemonBySpecies is not null)
             {
                 return cachedPokemonBySpecies;
             }
