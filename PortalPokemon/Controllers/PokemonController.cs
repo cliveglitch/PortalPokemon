@@ -35,7 +35,7 @@ namespace PortalPokemon.Controllers
             return View("~/Views/Home/Index.cshtml", items);
         }
 
-        public async Task<IActionResult> Paginated(int limit = 30, int offset = 0, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Paginated(int limit = 30, int offset = 0, string? nameFilter = null, CancellationToken cancellationToken = default)
         {
             if (limit <= 0)
             {
@@ -50,7 +50,7 @@ namespace PortalPokemon.Controllers
                 return BadRequest("Offset must be a non-negative integer.");
             }
 
-            var paginatedPokemon = await _pokemonService.GetPaginatedPokemonAsync(limit, offset, cancellationToken);
+            var paginatedPokemon = await _pokemonService.GetPaginatedPokemonAsync(limit, offset, nameFilter, cancellationToken);
 
             return View("~/Views/Home/Index.cshtml", paginatedPokemon);
         }

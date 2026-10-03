@@ -101,5 +101,18 @@ namespace PortalPokemon.Clients
 
             return paginatedPokemon;
         }
+
+        public async Task<IReadOnlyList<PaginatedPokemonResultModel>>GetPokemonCatalogAsync(CancellationToken cancellationToken)
+        {
+            var cacheKey = "pokemon_catalog";
+            var catalog = await GetPaginatedPokemonAsync(100_000, 0, cancellationToken);
+            if (catalog is not null)
+            {
+                _cache.Set(cacheKey, catalog, TimeSpan.FromHours(6));
+            }
+
+            return catalog?.Results
+                ?? throw new InvalidOperationException("PokéAPI returned no Pokémon catalog.");    
+        }
     }
 }

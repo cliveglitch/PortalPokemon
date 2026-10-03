@@ -128,3 +128,58 @@ body {
         color: #626b78;
         cursor: not-allowed;
     }
+
+.pokemon-search {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.search-bar {
+    display: flex;
+    width: 20rem;
+    max-width: 100%;
+    overflow: hidden;
+    border: 1px solid #dce1e7;
+    border-radius: 6px;
+    background: white;
+    font: inherit;
+}
+
+    .search-bar input[type="search"] {
+        flex: 1;
+        min-width: 0;
+        padding: 0.5rem 0.75rem;
+        border: 0;
+        background: transparent;
+        font: inherit;
+    }
+
+    .search-bar button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 0.75rem;
+        border: 0;
+        border-left: 1px solid #dce1e7;
+        background: transparent;
+        color: #2456a6;
+        cursor: pointer;
+    }
+
+        .search-bar button:hover {
+            background: #eef3fb;
+        }
+
+    .search-bar:focus-within {
+        border-color: #2456a6;
+        box-shadow: 0 0 0 2px #2456a6;
+    }
+
+    .search-bar input:focus-visible,
+    .search-bar button:focus-visible {
+        outline: 2px solid #2456a6;
+        outline-offset: -2px;
+    }

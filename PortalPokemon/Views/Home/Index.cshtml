@@ -15,6 +15,23 @@
         console.log(pokemon);
     </script>
 
+    <form method="get" action="/" class="pokemon-search">
+        <label for="pokemon-name">Name</label>
+        <div class="search-bar">
+            <input type="search"
+                   id="pokemon-name"
+                   name="nameFilter"
+                   value="@Model.NameFilter"
+                   placeholder="Search Pokémon…" />
+
+            <button type="submit">Search</button>
+        </div>
+
+        <input type="hidden" name="limit" value="@Model.Limit" />
+        <input type="hidden" name="offset" value="0" />
+
+    </form>
+
     <div class="pokemon-grid">
         @foreach (var pokemon in Model.Pokemons)
         {
@@ -23,9 +40,15 @@
     </div>
 
     <nav class="pagination-controls" aria-label="Pokémon pages">
-        @if (Model.Previous is not null)
+        @if (Model.HasPrevious)
         {
-            <a href="/?limit=@Model.Limit&offset=@(Math.Max(0, Model.Offset - Model.Limit))">Previous</a>
+            <a asp-controller="Pokemon"
+               asp-action="Paginated"
+               asp-route-nameFilter="@Model.NameFilter"
+               asp-route-limit="@Model.Limit"
+               asp-route-offset="@(Math.Max(0, Model.Offset - Model.Limit))">
+                Previous
+            </a>
         } else
         {
             <span class="pagination-disabled" role="link" aria-disabled="true">
@@ -33,9 +56,15 @@
             </span>
         }
 
-        @if (Model.Next is not null)
+        @if (Model.HasNext)
         {
-            <a href="/?limit=@Model.Limit&offset=@(Model.Offset + Model.Limit)">Next</a>
+            <a asp-controller="Pokemon"
+               asp-action="Paginated"
+               asp-route-nameFilter="@Model.NameFilter"
+               asp-route-limit="@Model.Limit"
+               asp-route-offset="@(Model.Offset + Model.Limit)">
+                Next
+            </a>
         } else
         {
             <span class="pagination-disabled" role="link" aria-disabled="true">
